@@ -4,7 +4,6 @@ resource "aws_s3_bucket" "s3_default" {
   bucket        = var.name
   force_destroy = var.force_destroy
   tags          = var.tags
-
 }
 
 resource "aws_s3_bucket_policy" "s3_default" {
@@ -137,6 +136,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "default" {
         }
       }
 
+      # Separate AbortIncompleteMultipartUpload from tags
       dynamic "abort_incomplete_multipart_upload" {
         for_each = try(tonumber(rule.value.abort_incomplete_multipart_upload_days), null) != null ? [1] : []
         content {
@@ -215,7 +215,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "default" {
 
 locals {
   attach_policy = var.attach_require_latest_tls_policy || var.attach_elb_log_delivery_policy || var.attach_lb_log_delivery_policy || var.attach_deny_insecure_transport_policy || var.attach_policy
-
 }
 
 resource "aws_s3_bucket_public_access_block" "this" {
@@ -238,7 +237,6 @@ resource "aws_s3_bucket_ownership_controls" "this" {
     object_ownership = var.object_ownership
   }
 
-  # This `depends_on` is to prevent "A conflicting conditional operation is currently in progress against this resource."
   depends_on = [
     aws_s3_bucket_policy.s3_default[0],
     aws_s3_bucket_public_access_block.this[0],
